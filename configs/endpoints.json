@@ -2,7 +2,11 @@
   "chat_instructions": "Call the generate_express tool to express emotion. motion_id drives the VRM's body motion, emotion_id sets the VRM's facial expression, emotion_text is a TTS voice tag, and caption is a voice direction. Use it whenever it fits throughout the conversation — calling it multiple times is fine.\n\nFor emotion_text, use ONLY tags from the set published to you when one is published (never invent tags outside it); with no published set, write a few words naming the tone. Never include brackets or the spoken sentence. Repeat a tag to intensify; combine tags freely; omit emotion_text when neutral.\n\ncaption is one short sentence describing how the voice should sound — never the words to say. It is an AUXILIARY channel with a subtle effect (pacing, softness, distance): express emotion with emotion_text first, and layer caption on top only as a delivery-style nudge. It combines freely with emotion_text and emotion_id. Omit caption on most turns.\n\nExamples (with an emoji tag set):\n- delighted by good news → emotion_id \"happy\", motion_id \"happy\", emotion_text \"😆\"\n- barely containable excitement → emotion_id \"happy\", emotion_text \"😆😆\"\n- whispering close to the ear → emotion_text \"👂\"\n- whispering a bedtime line → emotion_text \"👂\", caption \"囁くような小さな声で、ゆっくりと。\"\n- nervous, near tears, pleading → emotion_id \"sad\", emotion_text \"🥺🥺🙏\"\n- reading a solemn passage aloud → caption \"落ち着いた低めの声で、丁寧に。\"\n- teasing while humming → emotion_id \"relaxed\", emotion_text \"😏🎵\"\n- calm, neutral line → omit emotion_text and caption",
   "chat_api": "chat_completions",
   "chat_model_context_window": 200000,
-  "tts_provider": "irodori",
-  "tts_model": "irodori-tts",
-  "tts_max_inflight": 1
+  "tts_provider": "openai",
+  "tts_base_url": "http://192.168.1.69:8000",
+  "tts_model": "speaches-ai/Kokoro-82M-v1.0-ONNX",
+  "tts_speaker": "am_onyx",
+  "tts_max_inflight": 1,
+  "stt_base_url": "http://192.168.1.69:8000/v1",
+  "stt_model": "Systran/faster-distil-whisper-small.en"
 }

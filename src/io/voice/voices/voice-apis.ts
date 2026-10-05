@@ -43,6 +43,22 @@ const OPENAI_VOICES = [
   "cedar",
 ];
 
+/** List voices from an OpenAI-compatible server (e.g., speaches). Falls back to hardcoded OpenAI voices. */
+async function listOpenAiVoices(opts: VoicesRequestOptions): Promise<VoiceEntry[]> {
+  // Only query the server if it's not the official OpenAI API
+  if (!opts.baseUrl.includes("api.openai.com")) {
+    try {
+      const voices = await listVoices(opts);
+      if (voices && voices.length > 0) {
+        return voices.map((id) => ({ id }));
+      }
+    } catch {
+      // Fall through to hardcoded list on error
+    }
+  }
+  return OPENAI_VOICES.map((id) => ({ id }));
+}
+
 /** A provider absent here has no voice list. */
 export const VOICE_APIS: Partial<Record<TtsProviderName, VoiceApi>> = {
   irodori: {
@@ -51,6 +67,6 @@ export const VOICE_APIS: Partial<Record<TtsProviderName, VoiceApi>> = {
     remove: deleteVoice,
     keepsId: true,
   },
-  openai: { list: async () => OPENAI_VOICES.map((id) => ({ id })) },
+  openai: { list: listOpenAiVoices },
   fish: { list: listFishVoices, upsert: upsertFishVoice, remove: deleteFishVoice, manualId: true },
 };

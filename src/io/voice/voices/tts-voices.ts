@@ -63,8 +63,11 @@ export async function listVoices(opts: VoicesRequestOptions): Promise<string[] |
     }
     const body = (await untilAborted(res.json(), deadline.signal)) as {
       data?: Array<{ id?: unknown }>;
+      voices?: Array<{ id?: unknown }>;
     };
-    return (body.data ?? [])
+    // Handle both OpenAI format ({data: [...]}) and speaches format ({voices: [...]})
+    const voices = body.data ?? body.voices ?? [];
+    return voices
       .map((v) => v.id)
       .filter((id): id is string => typeof id === "string" && id.length > 0);
   } catch (err) {
