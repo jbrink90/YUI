@@ -129,6 +129,7 @@ export async function wireTurnCore(
     lipsyncSettings: settings.lipsyncSettings,
     fillerSettings: settings.fillerSettings,
     vadSettings: settings.vadSettings,
+    audioDeviceSettings: settings.audioDeviceSettings,
     speakerSelection,
     getEndpoints,
     getConfig: () => config.get(),

@@ -34,6 +34,7 @@ describe("createSettingsStores", () => {
       "pacerGapSettings",
       "lipsyncSettings",
       "vadSettings",
+      "audioDeviceSettings",
       "agentSettings",
       "fillerSettings",
       "bubblePersistSettings",

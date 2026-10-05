@@ -49,6 +49,7 @@ interface VoicePipelineDeps {
     subscribe?(cb: (s: FillerSettings) => void): () => void;
   };
   vadSettings: { get(): { silenceMs: number; bargeIn: boolean } };
+  audioDeviceSettings: { get(): { deviceId: string } };
   speakerSelection: { getActive(): SpeakerOption };
   voiceInputStatus: Pick<VoiceInputStatus, "set">;
   onVoiceSegment: (text: string) => void;
@@ -287,6 +288,7 @@ export function wireVoicePipeline(deps: VoicePipelineDeps): VoicePipeline {
       config: deps.getEndpoints,
       fetch: await selectFetch(),
       silenceMs: () => deps.vadSettings.get().silenceMs,
+      deviceId: () => deps.audioDeviceSettings.get().deviceId,
       getApiKey: deps.getSttApiKey,
       onVoiceSegment: deps.onVoiceSegment,
       onState: (state, detail) => deps.voiceInputStatus.set(state, detail),

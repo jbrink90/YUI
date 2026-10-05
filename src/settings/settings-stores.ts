@@ -46,6 +46,10 @@ import {
   localStorageStore,
   type PersistedStorage,
 } from "./persisted-store";
+import {
+  createAudioDeviceSettings,
+  localStorageAudioDeviceStorage,
+} from "./voice/audio-device-settings";
 import { createFillerSettings, localStorageFillerStorage } from "./voice/filler-settings";
 import { createVadSettings, localStorageVadStorage } from "./voice/vad-settings";
 
@@ -107,6 +111,10 @@ export function createSettingsStores(opts?: { locale?: CueLocale }) {
     storage: localStorageLipsyncStorage(),
   });
   const vadSettings = createVadSettings({ storage: localStorageVadStorage() });
+  // Selected mic for STT voice input; empty deviceId = OS default input.
+  const audioDeviceSettings = createAudioDeviceSettings({
+    storage: localStorageAudioDeviceStorage(),
+  });
   const agentSettings = createAgentSettings({
     storage: localStorageAgentStorage(),
   });
@@ -176,6 +184,7 @@ export function createSettingsStores(opts?: { locale?: CueLocale }) {
     pacerGapSettings,
     lipsyncSettings,
     vadSettings,
+    audioDeviceSettings,
     agentSettings,
     fillerSettings,
     bubblePersistSettings,
@@ -222,6 +231,7 @@ export const SYNC_MODE: Record<keyof SettingsStores, SyncMode> = {
   pacerGapSettings: "broadcast",
   lipsyncSettings: "broadcast",
   vadSettings: "broadcast",
+  audioDeviceSettings: "broadcast",
   agentSettings: "broadcast",
   fillerSettings: "broadcast",
   bubblePersistSettings: "broadcast",

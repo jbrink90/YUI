@@ -98,6 +98,7 @@ function setup(
       get: () => ({ enabled: true, language: "ja" as const, customPools: { ja: pool() } }),
     },
     vadSettings: { get: () => ({ silenceMs: 1_500, bargeIn: false }) },
+    audioDeviceSettings: { get: () => ({ deviceId: "" }) },
     speakerSelection: { getActive: getSpeaker },
     voiceInputStatus: { set: vi.fn() },
     onVoiceSegment: vi.fn(),

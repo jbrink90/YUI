@@ -156,6 +156,41 @@ describe("createSttVad — silenceMs configurable", () => {
   });
 });
 
+describe("createSttVad — mic deviceId", () => {
+  it("pins getUserMedia to the selected deviceId", async () => {
+    const stt = createSttVad({
+      config: () => CONFIG,
+      onVoiceSegment: vi.fn(),
+      deviceId: () => "mic-42",
+    });
+    await stt.start();
+    const constraints = getUserMedia.mock.calls[0][0] as MediaStreamConstraints;
+    expect(constraints.audio).toMatchObject({ deviceId: { exact: "mic-42" } });
+  });
+
+  it("reads deviceId lazily — a later pick applies to the next capture", async () => {
+    let deviceId = "mic-a";
+    const stt = createSttVad({
+      config: () => CONFIG,
+      onVoiceSegment: vi.fn(),
+      deviceId: () => deviceId,
+    });
+    await stt.start();
+    stt.stop();
+    deviceId = "mic-b";
+    await stt.start();
+    const constraints = getUserMedia.mock.calls.at(-1)?.[0] as MediaStreamConstraints;
+    expect(constraints.audio).toMatchObject({ deviceId: { exact: "mic-b" } });
+  });
+
+  it("leaves deviceId out of the constraints when unset", async () => {
+    const stt = createSttVad({ config: () => CONFIG, onVoiceSegment: vi.fn() });
+    await stt.start();
+    const constraints = getUserMedia.mock.calls[0][0] as MediaStreamConstraints;
+    expect(constraints.audio).not.toHaveProperty("deviceId");
+  });
+});
+
 describe("createSttVad — runtime state callbacks", () => {
   it("reports listening when VAD detects speech start", async () => {
     const onState = vi.fn();

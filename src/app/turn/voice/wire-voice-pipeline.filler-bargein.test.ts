@@ -105,6 +105,7 @@ function setup(): { voice: VoicePipeline; turnLog: ReturnType<typeof createTurnL
       }),
     },
     vadSettings: { get: () => ({ silenceMs: 1_500, bargeIn: true }) },
+    audioDeviceSettings: { get: () => ({ deviceId: "" }) },
     speakerSelection: { getActive: () => ({ id: "speaker-a", ref_url: "/speaker-a.wav" }) },
     voiceInputStatus: { set: vi.fn() },
     onVoiceSegment: vi.fn(),

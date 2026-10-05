@@ -51,6 +51,7 @@ export function wireTurnVoice(deps: {
   lipsyncSettings: { get(): { gain: number } };
   fillerSettings: SettingsStores["fillerSettings"];
   vadSettings: { get(): { silenceMs: number; bargeIn: boolean } };
+  audioDeviceSettings: SettingsStores["audioDeviceSettings"];
   speakerSelection: { getActive(): SpeakerOption };
   getEndpoints: () => EndpointsConfig;
   getConfig: () => AppConfig;
@@ -78,6 +79,7 @@ export function wireTurnVoice(deps: {
     lipsyncSettings,
     fillerSettings,
     vadSettings,
+    audioDeviceSettings,
     speakerSelection,
     getEndpoints,
     getConfig,
@@ -92,7 +94,12 @@ export function wireTurnVoice(deps: {
   // Voice creation precedes sources, so interaction notes stay late-bound across that cycle.
   let proactiveSourceRef: { noteInteraction(ts?: number): void } | null = null;
 
-  const voiceInput = wireVoiceInput({ voiceInputStatus, voicePersistence, voiceHost });
+  const voiceInput = wireVoiceInput({
+    voiceInputStatus,
+    voicePersistence,
+    voiceHost,
+    audioDeviceSettings,
+  });
   register(voiceInput.dispose);
   const turnLog = createTurnLog();
   const previousTurn = createPreviousTurn({ currentTurn: () => turnLog.current() });
@@ -114,6 +121,7 @@ export function wireTurnVoice(deps: {
     lipsyncSettings,
     fillerSettings,
     vadSettings,
+    audioDeviceSettings,
     speakerSelection,
     voiceInputStatus,
     onVoiceSegment: (text) => {
@@ -157,6 +165,8 @@ export function wireVoiceInput(deps: {
   voiceInputStatus: VoiceInputStatus;
   voicePersistence?: VoicePersistence;
   voiceHost?: VoiceHost;
+  /** Mic selection; a change while capturing bounces the engine onto the new device. */
+  audioDeviceSettings?: { subscribe(cb: () => void): () => void };
 }): {
   setStt: (stt: SttVad) => void;
   dispose: () => void;
@@ -197,6 +207,12 @@ export function wireVoiceInput(deps: {
   const unsubscribePersist = voiceInputStatus.subscribe((snapshot) => {
     voicePersistence?.set(snapshot.state !== "idle");
   });
+  // A new mic pick takes effect on the next stream acquisition — bounce capture when live.
+  const unsubscribeDevice = deps.audioDeviceSettings?.subscribe(() => {
+    if (voiceInputStatus.get().state === "idle") return;
+    stopVoiceInput();
+    void startVoiceInput();
+  });
   // Bind the STT engine once config is loaded; mark ready then auto-resume if left on last session.
   const setStt = (stt: SttVad): void => {
     sttVad = stt;
@@ -208,6 +224,7 @@ export function wireVoiceInput(deps: {
   const dispose = (): void => {
     unsubscribeStatus();
     unsubscribePersist();
+    unsubscribeDevice?.();
     void sttVad?.dispose();
   };
   return { setStt, dispose };

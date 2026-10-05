@@ -49,6 +49,7 @@ import type { createProactiveSettings } from "../../settings/cues/proactive-sett
 import type { createScheduleSettings } from "../../settings/cues/schedule-settings";
 import type { MessageWindowSettingsStore } from "../../settings/panels/message-window-settings";
 import type { ClampedIntSettingsStore, FlagSettingsStore } from "../../settings/persisted-store";
+import type { createAudioDeviceSettings } from "../../settings/voice/audio-device-settings";
 import type { createFillerSettings } from "../../settings/voice/filler-settings";
 import type { createVadSettings } from "../../settings/voice/vad-settings";
 import type { VoiceInputStatus } from "../chips/voice-input-status";
@@ -83,6 +84,7 @@ type ScheduleSettingsStore = ReturnType<typeof createScheduleSettings>;
 type WorkflowSettingsStore = ReturnType<typeof createWorkflowSettings>;
 type LipsyncSettingsStore = ReturnType<typeof createLipsyncSettings>;
 type VadSettingsStore = ReturnType<typeof createVadSettings>;
+type AudioDeviceSettingsStore = ReturnType<typeof createAudioDeviceSettings>;
 type AgentSettingsStore = ReturnType<typeof createAgentSettings>;
 type EndpointsSettingsStore = ReturnType<typeof createEndpointsSettings>;
 type FillerSettingsStore = ReturnType<typeof createFillerSettings>;
@@ -116,6 +118,8 @@ interface QuickControlsOptions {
   lipsync: LipsyncSettingsStore;
   /** STT silence threshold (ms) single-value store. Input tab slider drives it. */
   vad: VadSettingsStore;
+  /** Selected mic for STT voice input. If absent, the Input tab mic picker won't render. */
+  audioDeviceSettings?: AudioDeviceSettingsStore;
   agentSettings: AgentSettingsStore;
   vrmSelection: VrmSelectionStore;
   /** Perform actual swap + commit store on success. Component doesn't call store.select directly. */
@@ -244,6 +248,7 @@ export function createQuickControls({
   voiceStatus,
   lipsync,
   vad,
+  audioDeviceSettings,
   agentSettings,
   vrmSelection,
   swapVrm,
@@ -523,6 +528,7 @@ export function createQuickControls({
     root: el,
     voiceStatus,
     vad,
+    audioDeviceSettings,
     reflectSwitchRows: () => switchRows.reflect(),
     isOpen: popover.isOpen,
     log,

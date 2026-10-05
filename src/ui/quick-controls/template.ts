@@ -374,6 +374,10 @@ ${panelOpenHtml("input")}
               <span class="yui-gain__sub">${t("voice_input.silence_sub")}</span>
               <input class="yui-gain__slider yui-vad__slider" type="range" aria-label="${t("voice_input.silence_aria")}" />
             </div>${switchRowsHtml("input", "after-vad")}
+            <div class="yui-row">
+              <div class="yui-row__main"><label class="yui-input-row__label" for="yui-mic-select">${t("voice_input.device_label")}</label></div>
+              <select class="yui-select yui-mic-select" id="yui-mic-select" aria-label="${t("voice_input.device_aria")}"></select>
+            </div>
           </div>
         </div>
       </div>

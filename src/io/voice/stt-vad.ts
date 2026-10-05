@@ -24,9 +24,19 @@ type SttVadRuntimeState = Exclude<VoiceInputState, "idle">;
 const VAD_ASSET_PATH = "/vad/";
 
 // The constraints @ricky0123/vad-web asks getUserMedia for by default.
-const MIC_CONSTRAINTS: MediaStreamConstraints = {
-  audio: { channelCount: 1, echoCancellation: true, autoGainControl: true, noiseSuppression: true },
+const MIC_TRACK_CONSTRAINTS: MediaTrackConstraints = {
+  channelCount: 1,
+  echoCancellation: true,
+  autoGainControl: true,
+  noiseSuppression: true,
 };
+const MIC_CONSTRAINTS: MediaStreamConstraints = { audio: MIC_TRACK_CONSTRAINTS };
+
+/** Mic constraints for one capture; a non-empty deviceId pins capture to that input. */
+function micConstraints(deviceId?: string): MediaStreamConstraints {
+  if (!deviceId) return MIC_CONSTRAINTS;
+  return { audio: { ...MIC_TRACK_CONSTRAINTS, deviceId: { exact: deviceId } } };
+}
 
 function releaseTracks(stream: MediaStream): void {
   for (const track of stream.getTracks()) track.stop();
@@ -45,6 +55,11 @@ export interface SttVadOptions {
    * A getter, so a live setting is read at each start() rather than pinned at construction.
    */
   silenceMs?: () => number;
+  /**
+   * Selected audio input device id; empty/omitted = OS default input.
+   * A getter, so a live setting is read at each capture start rather than pinned at construction.
+   */
+  deviceId?: () => string;
   /** Called once per completed voice segment after STT succeeds. */
   onVoiceSegment: (text: string) => void;
   /** Reports client-side voice pipeline state for runtime UI. */
@@ -215,7 +230,9 @@ export function createSttVad(options: SttVadOptions): SttVad {
       }
       if (!wanted || capturing) return;
       const instance = vad;
-      const acquired = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+      const acquired = await navigator.mediaDevices.getUserMedia(
+        micConstraints(options.deviceId?.()),
+      );
       if (!wanted) {
         releaseTracks(acquired);
         return;
