@@ -15,6 +15,7 @@ function setup() {
       remote = cb;
       return unsubscribeRemote;
     }),
+    emitVoiceStateAsk: vi.fn(),
   };
   const dispose = wireVoiceMirror({ voiceInputStatus, bridge });
   return {
@@ -42,6 +43,12 @@ it("emits a local change to the bridge", () => {
   voiceInputStatus.set("idle");
 
   expect(bridge.emitVoiceSet.mock.calls).toEqual([[true], [false]]);
+});
+
+it("asks for the current voice state so a reloaded window reflects STT being on", () => {
+  const { bridge } = setup();
+
+  expect(bridge.emitVoiceStateAsk).toHaveBeenCalledOnce();
 });
 
 it("stops emitting after the disposer runs", () => {

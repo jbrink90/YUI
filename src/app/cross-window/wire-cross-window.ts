@@ -43,8 +43,12 @@ export function wireCrossWindowSync(deps: {
     voiceInputStatus.set(on ? "listening" : "idle");
   });
   // Voice state (this window → separate window): separate window indicator reflects actual STT state.
+  // Emissions only fire on change, so a reloaded settings window asks for the current state.
   voiceInputStatus.subscribe((snapshot) => {
     core.bridge.emitVoiceState({ state: snapshot.state });
+  });
+  core.bridge.onVoiceStateAsk(() => {
+    core.bridge.emitVoiceState({ state: voiceInputStatus.get().state });
   });
   return {
     broadcastSettings: core.broadcastSettings,

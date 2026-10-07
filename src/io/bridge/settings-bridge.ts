@@ -17,6 +17,7 @@ const CH_SETTINGS_CHANGED = "yui://settings-changed";
 const CH_MOUTH_PREVIEW = "yui://mouth-preview";
 const CH_VOICE_SET = "yui://voice-set";
 const CH_VOICE_STATE = "yui://voice-state";
+const CH_VOICE_STATE_ASK = "yui://voice-state-ask";
 const CH_PUSH_STATE = "yui://push-state";
 const CH_PUSH_STATE_ASK = "yui://push-state-ask";
 const CH_PUSH_RESET = "yui://push-reset";
@@ -46,6 +47,9 @@ export interface SettingsBridge {
   onVoiceSet(cb: (on: boolean) => void): () => void;
   emitVoiceState(snapshot: VoiceStateSnapshot): void;
   onVoiceState(cb: (snapshot: VoiceStateSnapshot) => void): () => void;
+  /** A window that missed earlier voice-state emissions asking the pet window to re-send. */
+  emitVoiceStateAsk(): void;
+  onVoiceStateAsk(cb: () => void): () => void;
   /** Where the push socket stands. Only the window that owns the socket emits it. */
   emitPushState(state: PushSocketState): void;
   onPushState(cb: (state: PushSocketState) => void): () => void;
@@ -108,6 +112,12 @@ export function createSettingsBridge(
     },
     onVoiceState(cb) {
       return on<VoiceStateSnapshot>(CH_VOICE_STATE, (s) => cb(s));
+    },
+    emitVoiceStateAsk() {
+      safeEmit(CH_VOICE_STATE_ASK);
+    },
+    onVoiceStateAsk(cb) {
+      return on<unknown>(CH_VOICE_STATE_ASK, () => cb());
     },
     emitPushState(state) {
       safeEmit(CH_PUSH_STATE, state);

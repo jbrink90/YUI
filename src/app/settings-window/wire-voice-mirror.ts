@@ -7,7 +7,7 @@ import type { VoiceInputStatus } from "../../ui/chips/voice-input-status";
  */
 export function wireVoiceMirror(deps: {
   voiceInputStatus: VoiceInputStatus;
-  bridge: Pick<SettingsBridge, "emitVoiceSet" | "onVoiceState">;
+  bridge: Pick<SettingsBridge, "emitVoiceSet" | "onVoiceState" | "emitVoiceStateAsk">;
 }): () => void {
   const { voiceInputStatus, bridge } = deps;
   let applyingRemoteVoice = false;
@@ -22,6 +22,9 @@ export function wireVoiceMirror(deps: {
       applyingRemoteVoice = false;
     }
   });
+  // Voice state only emits on change — ask for the current value so a (re)loaded window
+  // doesn't sit on the default "idle" while STT is actually on.
+  bridge.emitVoiceStateAsk();
   return () => {
     unsubscribeLocal();
     unsubscribeRemote();

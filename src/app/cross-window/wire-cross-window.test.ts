@@ -20,6 +20,8 @@ const { fakeBridge, createSettingsBridge } = vi.hoisted(() => {
     onVoiceSet: vi.fn(),
     emitVoiceState: vi.fn(),
     onVoiceState: vi.fn(),
+    emitVoiceStateAsk: vi.fn(),
+    onVoiceStateAsk: vi.fn(),
     dispose: vi.fn(),
   };
   return { fakeBridge, createSettingsBridge: vi.fn(() => fakeBridge) };
@@ -57,6 +59,7 @@ describe("wireCrossWindowSync", () => {
     fakeBridge.onMouthPreview.mockClear();
     fakeBridge.onVoiceSet.mockClear();
     fakeBridge.emitVoiceState.mockClear();
+    fakeBridge.onVoiceStateAsk.mockClear();
     fakeBridge.dispose.mockClear();
     createSettingsBridge.mockClear();
     wireStorageSync.mockClear();
@@ -156,6 +159,17 @@ describe("wireCrossWindowSync", () => {
     const deps = makeDeps();
     wireCrossWindowSync(deps as never);
     deps.voiceInputStatus.set("listening");
+    expect(fakeBridge.emitVoiceState).toHaveBeenCalledWith({ state: "listening" });
+    teardown(deps);
+  });
+
+  it("answers a voice-state ask with the current state", () => {
+    const deps = makeDeps();
+    wireCrossWindowSync(deps as never);
+    deps.voiceInputStatus.set("listening");
+    fakeBridge.emitVoiceState.mockClear();
+    const onVoiceStateAsk = fakeBridge.onVoiceStateAsk.mock.calls[0][0] as () => void;
+    onVoiceStateAsk();
     expect(fakeBridge.emitVoiceState).toHaveBeenCalledWith({ state: "listening" });
     teardown(deps);
   });
