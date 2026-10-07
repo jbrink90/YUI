@@ -16,6 +16,7 @@ import { VOICE_APIS } from "./voice-apis";
 /** The endpoints fields this needs, or null when config is not loaded yet. */
 type VoiceListEndpoints = {
   tts_base_url?: string;
+  tts_model?: string;
   tts_speaker?: string;
   tts_provider?: TtsProviderName;
 } | null;
@@ -61,6 +62,7 @@ export function createVoiceListRefresh(deps: {
       const f = await selectFetch();
       const voices = await api.list({
         baseUrl: eps.tts_base_url,
+        model: eps.tts_model,
         fetch: f,
         getApiKey,
         logger: log,
@@ -109,8 +111,8 @@ export function createVoiceListRefresh(deps: {
 }
 
 /**
- * Refetches the voice list when an endpoints-override commit changes the TTS URL, speaker or
- * provider, or the TTS key changes. The override store notifies on every field's commit, so non-TTS edits (chat URL etc)
+ * Refetches the voice list when an endpoints-override commit changes the TTS URL, model, speaker
+ * or provider, or the TTS key changes (the model scopes the list on Speaches). The override store notifies on every field's commit, so non-TTS edits (chat URL etc)
  * are filtered out here.
  */
 export function wireVoiceListAutoRefresh(deps: {
@@ -125,7 +127,9 @@ export function wireVoiceListAutoRefresh(deps: {
   const key = (): string | null => {
     try {
       const eps = deps.getEndpoints();
-      return [eps?.tts_base_url, eps?.tts_speaker, eps?.tts_provider].join("\u0000");
+      return [eps?.tts_base_url, eps?.tts_model, eps?.tts_speaker, eps?.tts_provider].join(
+        "\u0000",
+      );
     } catch {
       return null;
     }

@@ -50,6 +50,16 @@ const SPEECH_REQUEST = {
       },
     };
   },
+  // OpenAI's wire minus `instructions`: Speaches' local models take no voice direction.
+  speaches: (input: string, _call?: TtsSynthCallOptions, parts?: RequestParts): SpeechRequest => ({
+    path: "/v1/audio/speech",
+    body: {
+      input,
+      response_format: "wav",
+      ...(parts?.model !== undefined ? { model: parts.model } : {}),
+      ...(parts?.voice !== undefined ? { voice: parts.voice } : {}),
+    },
+  }),
   fish: (input: string, call?: TtsSynthCallOptions, parts?: RequestParts): SpeechRequest => {
     // S2 inline direction: each cue rides in its own bracket pair ahead of the sentence.
     const cues = [

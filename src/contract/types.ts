@@ -332,7 +332,7 @@ export interface ClientContext {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** TTS engines YUI speaks to. */
-export type TtsProviderName = "irodori" | "openai" | "fish";
+export type TtsProviderName = "irodori" | "openai" | "fish" | "speaches";
 
 /**
  * configs/endpoints.json. The three base URLs (chat/stt/tts) are separate processes.

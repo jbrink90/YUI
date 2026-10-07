@@ -20,6 +20,8 @@ export interface VoicesRequestOptions {
   /** Resolves the TTS server key (Bearer) per request. Omitted/empty → no auth header. */
   getApiKey?: () => Promise<string | undefined>;
   logger?: Logger;
+  /** The configured TTS model — only providers whose voices belong to a model (Speaches) read it. */
+  model?: string;
 }
 
 export async function authHeaders(

@@ -594,6 +594,31 @@ describe("createTtsProvider", () => {
     expect("irodori" in openai).toBe(false);
   });
 
+  it("synth posts Speaches the OpenAI speech body without instructions", async () => {
+    const fetchMock = vi.fn<FetchFn>(async () => okResponse(new ArrayBuffer(4)));
+    const provider = createTtsProvider({
+      getEndpoints: () =>
+        endpoints({
+          tts_provider: "speaches",
+          tts_base_url: "http://localhost:8000",
+          tts_model: "speaches-ai/Kokoro-82M-v1.0-ONNX",
+        }),
+      getActiveSpeaker: () => ({ id: "af_heart", ref_url: "" }),
+      selectFetch: async () => fetchMock as unknown as typeof fetch,
+    });
+
+    await provider.synth("hi", undefined, { emotion_text: "😆", caption: "softly" });
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("http://localhost:8000/v1/audio/speech");
+    expect(JSON.parse(init.body as string)).toEqual({
+      input: "hi",
+      response_format: "wav",
+      model: "speaches-ai/Kokoro-82M-v1.0-ONNX",
+      voice: "af_heart",
+    });
+  });
+
   it("synth resolves fetch via selectFetch and posts model + the active speaker as voice", async () => {
     const buf = new ArrayBuffer(4);
     const fetchMock = vi.fn<FetchFn>(async () => okResponse(buf));

@@ -2,6 +2,7 @@
 
 import type { TtsProviderName } from "../../../contract";
 import { deleteFishVoice, listFishVoices, upsertFishVoice } from "./fish-voices";
+import { listSpeachesModels, listSpeachesVoices } from "./speaches-voices";
 import {
   deleteVoice,
   listVoices,
@@ -24,6 +25,8 @@ export interface VoiceApi {
   keepsId?: boolean;
   /** true: the provider speaks any voice id, not just listed ones — the panel offers a paste-id field. */
   manualId?: boolean;
+  /** Absent: the server can't list its models, so the model field takes typed ids only. */
+  listModels?: (opts: VoicesRequestOptions) => Promise<string[] | null>;
 }
 
 /** OpenAI's built-in voices; `tts-1` models speak only some of them. */
@@ -69,4 +72,5 @@ export const VOICE_APIS: Partial<Record<TtsProviderName, VoiceApi>> = {
   },
   openai: { list: listOpenAiVoices },
   fish: { list: listFishVoices, upsert: upsertFishVoice, remove: deleteFishVoice, manualId: true },
+  speaches: { list: listSpeachesVoices, listModels: listSpeachesModels },
 };

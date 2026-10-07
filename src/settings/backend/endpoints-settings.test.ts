@@ -594,7 +594,7 @@ describe("ENDPOINT_FIELD_SPECS", () => {
   it("assigns kind 'enum' to tts_provider with every provider", () => {
     const provider = ENDPOINT_FIELD_SPECS.find((s) => s.key === "tts_provider")!;
     expect(provider.kind).toBe("enum");
-    expect(provider.enum).toEqual(["irodori", "openai", "fish"]);
+    expect(provider.enum).toEqual(["irodori", "openai", "fish", "speaches"]);
   });
 });
 

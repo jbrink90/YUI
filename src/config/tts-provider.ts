@@ -5,6 +5,7 @@ export const TTS_PROVIDERS = [
   "irodori",
   "openai",
   "fish",
+  "speaches",
 ] as const satisfies readonly TtsProviderName[];
 
 /** The TTS engine the endpoints select — Irodori when they name none. */

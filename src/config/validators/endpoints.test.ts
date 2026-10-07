@@ -155,8 +155,8 @@ describe("validateEndpoints — chat_model / chat_instructions / chat_api", () =
 });
 
 describe("validateEndpoints — tts_provider", () => {
-  it("accepts every provider, fish included", () => {
-    for (const p of ["irodori", "openai", "fish"]) {
+  it("accepts every provider, fish and speaches included", () => {
+    for (const p of ["irodori", "openai", "fish", "speaches"]) {
       expect(validateEndpoints(FILE, baseRaw({ tts_provider: p })).tts_provider).toBe(p);
     }
   });
