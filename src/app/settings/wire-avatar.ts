@@ -120,6 +120,7 @@ export function wireSpeakerSelection(deps: {
   /** Effective endpoints, or null while a best-effort config load has not finished. */
   getEndpoints: () => {
     tts_base_url?: string;
+    tts_model?: string;
     tts_speaker?: string;
     tts_provider?: TtsProviderName;
   } | null;
@@ -143,6 +144,8 @@ export function wireSpeakerSelection(deps: {
   canReuploadVoices: () => boolean;
   /** Whether the current provider's VoiceApi sets manualId — the panel shows a paste-id field. */
   canPasteVoiceId: () => boolean;
+  /** The live TTS server's installed models; null when the provider lists none or the read failed. */
+  listTtsModels: () => Promise<string[] | null>;
   /** Moves imported voices whose id the TTS server rejects to an ASCII id. */
   migrateVoiceIds: () => Promise<void>;
 } {
@@ -176,6 +179,17 @@ export function wireSpeakerSelection(deps: {
   const canManageVoices = (): boolean => Boolean(liveApi()?.upsert);
   const canReuploadVoices = (): boolean => Boolean(liveApi()?.keepsId);
   const canPasteVoiceId = (): boolean => Boolean(liveApi()?.manualId);
+  const listTtsModels = async (): Promise<string[] | null> => {
+    const eps = getEndpoints();
+    const listModels = liveApi()?.listModels;
+    if (!eps?.tts_base_url || !listModels) return null;
+    return listModels({
+      baseUrl: eps.tts_base_url,
+      fetch: await selectFetch(),
+      getApiKey,
+      logger: log,
+    });
+  };
   // Re-upload the reference clip — server-side force-refresh only, does not change the selection.
   const refreshSpeaker = async (option: SpeakerOption): Promise<void> => {
     const {
@@ -243,6 +257,7 @@ export function wireSpeakerSelection(deps: {
     canManageVoices,
     canReuploadVoices,
     canPasteVoiceId,
+    listTtsModels,
     migrateVoiceIds: () =>
       migrateUserVoiceIds({
         speakerSelection,

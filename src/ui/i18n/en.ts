@@ -368,6 +368,7 @@ const en: Record<string, string> = {
 
   // endpoints
   "endpoints.field_sub": "Leave empty to use the default",
+  "endpoints.model_default": "Default",
   "endpoints.url_error": "Not a valid URL (http:// or https://)",
   "endpoints.chat_base_url.label": "Chat server URL",
   "endpoints.stt_base_url.label": "Speech recognition (STT) server URL",

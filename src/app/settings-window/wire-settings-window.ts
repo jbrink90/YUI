@@ -1,4 +1,4 @@
-import { TTS_API_KEY_SECRET } from "../../config/secrets";
+import { CHAT_API_KEY_SECRET, TTS_API_KEY_SECRET } from "../../config/secrets";
 import { createConfigStore } from "../../config/store";
 import { importVrmFromFile, removeUserVrm } from "../../io/assets/vrm-import";
 import {
@@ -9,6 +9,7 @@ import {
 import { createDelegationHistory } from "../../io/bridge/delegations/delegation-history";
 import { createMirroredDelegations } from "../../io/bridge/delegations/delegations-bridge";
 import { createMirroredPushSocket } from "../../io/bridge/push/push-socket-bridge";
+import { createChatModelLister } from "../../io/chat/models/chat-models";
 import { createSettingsSecretProvider } from "../../io/chat/secret-provider";
 import { wireVoiceListAutoRefresh } from "../../io/voice/voices/voice-list-refresh";
 import { resolveScreenSourceProvider } from "../../io/window/capture/tauri-screen";
@@ -71,10 +72,10 @@ export async function wireSettingsWindow(deps: { app: HTMLElement }): Promise<vo
   const sourceProvider = resolveScreenSourceProvider();
 
   // Config for default instructions placeholder loaded best-effort only (failure → generic placeholder).
-  // The TTS key rides along so this window's voice uploads reach a gated server too.
+  // The TTS and chat keys ride along so this window's voice uploads and model lists reach a gated server too.
   const config = createConfigStore({
     secrets: createSettingsSecretProvider({
-      stores: { [TTS_API_KEY_SECRET]: ttsKeySettings },
+      stores: { [TTS_API_KEY_SECRET]: ttsKeySettings, [CHAT_API_KEY_SECRET]: chatKeySettings },
       fallback: devKeyFallback(),
     }),
   });
@@ -138,6 +139,7 @@ export async function wireSettingsWindow(deps: { app: HTMLElement }): Promise<vo
     canManageVoices,
     canReuploadVoices,
     canPasteVoiceId,
+    listTtsModels,
   } = wireSpeakerSelection({
     getEndpoints,
     getApiKey: getTtsApiKey,
@@ -233,6 +235,12 @@ export async function wireSettingsWindow(deps: { app: HTMLElement }): Promise<vo
       canManageVoices,
       canReuploadVoices,
       canPasteVoiceId,
+      listTtsModels,
+      listChatModels: createChatModelLister({
+        getEndpoints,
+        getApiKey: () => config.secrets.get(CHAT_API_KEY_SECRET),
+        log,
+      }),
       // Renderer in main window, pass gain preview via bridge → main window VRM mouth moves.
       onGainPreview: (mouthOpen) => bridge.emitMouthPreview(mouthOpen),
       onGainPreviewEnd: () => bridge.emitMouthPreview(null),

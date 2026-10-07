@@ -28,6 +28,7 @@ import {
 } from "../constants";
 import { secHeadHtml } from "../markup";
 import { createEndpointsSection, validateEndpointInput } from "./endpoints-section";
+import { createModelSelect, type ModelSelect } from "./model-select";
 
 type EndpointsSettingsStore = ReturnType<typeof createEndpointsSettings>;
 
@@ -214,6 +215,10 @@ export function createConnectionTab(deps: {
   isOpen: () => boolean;
   /** Extra element mounted after the TTS group (the desktop's speaker picker `.yui-group`). */
   ttsExtra?: HTMLElement;
+  /** The live chat server's models — turns the chat model field into a dropdown. Absent: plain text. */
+  listChatModels?: () => Promise<string[] | null>;
+  /** The live TTS server's installed models — turns the TTS model field into a dropdown. Absent: plain text. */
+  listTtsModels?: () => Promise<string[] | null>;
   log: Logger;
 }): ConnectionTab {
   const {
@@ -227,6 +232,8 @@ export function createConnectionTab(deps: {
     pushSocket,
     isOpen,
     ttsExtra,
+    listChatModels,
+    listTtsModels,
     log,
   } = deps;
 
@@ -269,6 +276,31 @@ export function createConnectionTab(deps: {
     const input = el.querySelector<HTMLInputElement>(`#yui-ep-${key}`);
     if (input) epInputs.set(key, input);
   }
+
+  // Model dropdowns, each refetched only when the server it lists moves — a model pick alone
+  // must not refetch. serverKey reads the overrides; panel open covers bundled-config edits.
+  const modelSelects: Array<{ select: ModelSelect; serverKey: () => string; last: string }> = [];
+  function addModelSelect(
+    key: "chat_model" | "tts_model",
+    listModels: (() => Promise<string[] | null>) | undefined,
+    serverKey: () => string,
+  ): void {
+    const input = epInputs.get(key);
+    if (!input || !listModels) return;
+    modelSelects.push({
+      select: createModelSelect({ input, listModels }),
+      serverKey,
+      last: serverKey(),
+    });
+  }
+  addModelSelect("chat_model", listChatModels, () => {
+    const ov = endpointsSettings.get();
+    return `${ov.chat_api}\u0000${ov.chat_base_url}`;
+  });
+  addModelSelect("tts_model", listTtsModels, () => {
+    const ov = endpointsSettings.get();
+    return `${ov.tts_provider}\u0000${ov.tts_base_url}`;
+  });
 
   function isChatApi(v: string | undefined): v is ChatApi {
     return v !== undefined && (CHAT_APIS as readonly string[]).includes(v);
@@ -375,6 +407,7 @@ export function createConnectionTab(deps: {
       }
       validateEndpointInput(key, input);
     }
+    for (const m of modelSelects) m.select.sync();
   }
 
   function refresh(): void {
@@ -383,6 +416,8 @@ export function createConnectionTab(deps: {
     reflectChatType();
     reflectChatPreset();
     reflectTtsProvider();
+    // The server may have installed or dropped models since the last open.
+    for (const m of modelSelects) m.select.reload();
   }
 
   function commit(): void {
@@ -399,11 +434,18 @@ export function createConnectionTab(deps: {
   chatStatusActionEl.addEventListener("click", handleChatStatusAction);
 
   const unsubscribeEndpoints = endpointsSettings.subscribe(() => {
+    const moved = modelSelects.filter((m) => {
+      const next = m.serverKey();
+      const changed = next !== m.last;
+      m.last = next;
+      return changed;
+    });
     if (isOpen()) {
       reflectEndpoints();
       reflectChatType();
       reflectChatPreset();
       reflectTtsProvider();
+      for (const m of moved) m.select.reload();
     }
   });
   // The socket moves on its own — its status line follows whether or not a setting changed.
@@ -422,6 +464,7 @@ export function createConnectionTab(deps: {
       unsubscribeEndpoints();
       unsubscribePushState?.();
       chatStatusActionEl.removeEventListener("click", handleChatStatusAction);
+      for (const m of modelSelects) m.select.dispose();
       endpointsSection.dispose();
       el.remove();
     },

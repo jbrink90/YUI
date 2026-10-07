@@ -127,15 +127,113 @@ describe("createConnectionTab", () => {
 
   // ── TTS provider ──────────────────────────────────────────────────────────────────────────
 
-  it("offers Irodori, OpenAI and Fish as TTS providers above a model field (desktop rows)", () => {
+  it("offers Irodori, OpenAI, Fish and Speaches as TTS providers above a model field (desktop rows)", () => {
     const tab = build(DESKTOP_ROWS);
 
     const select = tab.el.querySelector<HTMLSelectElement>("#yui-svc-tts-provider")!;
     expect(select.disabled).toBe(false);
-    expect([...select.options].map((o) => o.value)).toEqual(["irodori", "openai", "fish"]);
+    expect([...select.options].map((o) => o.value)).toEqual([
+      "irodori",
+      "openai",
+      "fish",
+      "speaches",
+    ]);
     expect(tab.el.querySelector("#yui-ep-tts_model")).not.toBeNull();
 
     tab.dispose();
+  });
+
+  it("selecting Speaches points at localhost:8000 with its Kokoro model", () => {
+    const tab = build(DESKTOP_ROWS);
+
+    const select = tab.el.querySelector<HTMLSelectElement>("#yui-svc-tts-provider")!;
+    select.value = "speaches";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(endpointsSettings.get()).toMatchObject({
+      tts_provider: "speaches",
+      tts_base_url: "http://localhost:8000",
+      tts_model: "speaches-ai/Kokoro-82M-v1.0-ONNX",
+    });
+
+    tab.dispose();
+  });
+
+  function buildWithModels(lists: {
+    listChatModels?: () => Promise<string[] | null>;
+    listTtsModels?: () => Promise<string[] | null>;
+  }) {
+    return createConnectionTab({
+      endpointsSettings,
+      chatKeySettings,
+      sttKeySettings: createSttKeySettings({ storage: inMemoryApiKeyStorage() }),
+      ttsKeySettings: createTtsKeySettings({ storage: inMemoryApiKeyStorage() }),
+      rows: DESKTOP_ROWS,
+      isOpen: () => true,
+      ...lists,
+      log: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+    });
+  }
+
+  const modelSelectOf = (tab: { el: HTMLElement }, key: string) =>
+    tab.el.querySelector<HTMLSelectElement>(`[data-ep-field="${key}"] .yui-model-select`)!;
+
+  it("swaps the chat model field for a dropdown of the server's models, and a pick commits", async () => {
+    const tab = buildWithModels({ listChatModels: async () => ["llama3.2", "qwen3:8b"] });
+    const input = tab.el.querySelector<HTMLInputElement>("#yui-ep-chat_model")!;
+
+    tab.refresh();
+    const select = modelSelectOf(tab, "chat_model");
+    await vi.waitFor(() => expect(select.hidden).toBe(false));
+    expect(input.closest<HTMLElement>(".yui-input-wrap")!.hidden).toBe(true);
+    expect([...select.options].map((o) => o.value)).toEqual([
+      "",
+      "llama3.2",
+      "qwen3:8b",
+      "\u0000custom",
+    ]);
+
+    select.value = "qwen3:8b";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(endpointsSettings.get().chat_model).toBe("qwen3:8b");
+
+    // Custom brings the text field back for an id the server does not list.
+    select.value = "\u0000custom";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(input.closest<HTMLElement>(".yui-input-wrap")!.hidden).toBe(false);
+
+    tab.dispose();
+  });
+
+  it("keeps a configured model the server does not list, and the plain field when it lists none", async () => {
+    endpointsSettings.set({ chat_model: "gone:latest" });
+    const tab = buildWithModels({
+      listChatModels: async () => ["llama3.2"],
+      listTtsModels: async () => null,
+    });
+
+    tab.refresh();
+    const chat = modelSelectOf(tab, "chat_model");
+    await vi.waitFor(() => expect(chat.hidden).toBe(false));
+    expect(chat.value).toBe("gone:latest");
+    expect(modelSelectOf(tab, "tts_model").hidden).toBe(true);
+
+    tab.dispose();
+  });
+
+  it("refetches a model list only when its server moves, not on a model pick", async () => {
+    const listTtsModels = vi.fn(async () => ["speaches-ai/Kokoro-82M-v1.0-ONNX"]);
+    const tab = buildWithModels({ listTtsModels });
+
+    tab.refresh();
+    await vi.waitFor(() => expect(listTtsModels).toHaveBeenCalledTimes(1));
+    endpointsSettings.set({ tts_model: "speaches-ai/Kokoro-82M-v1.0-ONNX" });
+    expect(listTtsModels).toHaveBeenCalledTimes(1);
+    endpointsSettings.set({ tts_base_url: "http://192.168.1.69:8000" });
+    expect(listTtsModels).toHaveBeenCalledTimes(2);
+
+    tab.dispose();
+    expect(tab.el.querySelector(".yui-model-select")).toBeNull();
   });
 
   it("selecting Fish writes the provider, its URL and default model in one store write", () => {

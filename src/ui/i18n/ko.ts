@@ -367,6 +367,7 @@ const ko: Record<string, string> = {
 
   // endpoints
   "endpoints.field_sub": "비우면 기본값을 사용해요",
+  "endpoints.model_default": "기본값",
   "endpoints.url_error": "올바른 URL이 아니에요 (http:// 또는 https://)",
   "endpoints.chat_base_url.label": "채팅 서버 URL",
   "endpoints.stt_base_url.label": "음성 인식(STT) 서버 URL",

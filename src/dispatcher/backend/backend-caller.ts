@@ -225,7 +225,11 @@ export function createBackendCaller(deps: BackendCallerDeps): BackendCaller {
       }
 
       const input = encodeInput(ctx, env, clientContext, nowMs);
-      log.debug("backend_call", { event_name: env.event_name, seq_id: env.seq_id });
+      log.debug("backend_call", {
+        event_name: env.event_name,
+        seq_id: env.seq_id,
+        model: deps.config.chat_model,
+      });
 
       // B2: After resolving fetch/apiKey, streamChat. Pass externalSignal as-is (delegate abort).
       let apiKey: string | undefined;

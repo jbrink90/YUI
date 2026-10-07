@@ -370,6 +370,7 @@ const ja: Record<string, string> = {
 
   // endpoints
   "endpoints.field_sub": "空欄にするとデフォルトを使います",
+  "endpoints.model_default": "デフォルト",
   "endpoints.url_error": "正しい URL ではありません (http:// または https://)",
   "endpoints.chat_base_url.label": "チャットサーバー URL",
   "endpoints.stt_base_url.label": "音声認識 (STT) サーバー URL",

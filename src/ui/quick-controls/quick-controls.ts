@@ -147,6 +147,10 @@ interface QuickControlsOptions {
   canPasteVoiceId: () => boolean;
   /** Refetches the TTS server's voice list on panel open (the server may come up after the app). Fire-and-forget. */
   refreshVoiceList?: () => void;
+  /** The live chat server's models — the Connection tab's chat model dropdown. */
+  listChatModels?: () => Promise<string[] | null>;
+  /** The live TTS server's installed models — the Connection tab's TTS model dropdown. */
+  listTtsModels?: () => Promise<string[] | null>;
   onGainPreview: (mouthOpen: number) => void;
   onGainPreviewEnd: () => void;
   /** Reset the camera viewpoint (orbit angles) to head-on. Renders the section when set. */
@@ -264,6 +268,8 @@ export function createQuickControls({
   canReuploadVoices,
   canPasteVoiceId,
   refreshVoiceList,
+  listChatModels,
+  listTtsModels,
   onGainPreview,
   onGainPreviewEnd,
   onResetViewpoint,
@@ -373,6 +379,8 @@ export function createQuickControls({
     pushSocket,
     isOpen: () => popover.isOpen(),
     ttsExtra,
+    listChatModels,
+    listTtsModels,
     log,
   });
   el.querySelector("#yui-panel-conn")!.append(connectionTab.el);
