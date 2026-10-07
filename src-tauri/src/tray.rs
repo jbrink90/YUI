@@ -73,8 +73,8 @@ fn open_settings(app: &AppHandle) {
                 WebviewUrl::App("settings.html".into()),
             )
             .title("YUI Settings")
-            .inner_size(480.0, 660.0)
-            .min_inner_size(380.0, 480.0)
+            .inner_size(560.0, 760.0)
+            .min_inner_size(460.0, 560.0)
             .resizable(true)
             .decorations(true)
             .transparent(false)
@@ -86,6 +86,12 @@ fn open_settings(app: &AppHandle) {
     {
         log::warn!("tray_spawn_settings_window_thread_failed error={error}");
     }
+}
+
+/// Quits the app from the pet window's context menu (same action as the tray's Quit item).
+#[tauri::command]
+pub fn quit_app(app: AppHandle) {
+    app.exit(0);
 }
 
 pub fn setup(app: &AppHandle) -> tauri::Result<()> {

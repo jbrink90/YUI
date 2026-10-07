@@ -30,6 +30,8 @@ interface Phase1Handles extends TurnCorePhase1 {
   root: HTMLElement;
   stage: HTMLElement;
   getQuickControls(): ReturnType<typeof createQuickControls>;
+  /** Opens the detached settings window — the panel no longer docks on the character. */
+  openSettings: () => void;
   isDisposed(): boolean;
 }
 
@@ -99,7 +101,7 @@ const realFactories: ConfiguredBootstrapFactories = {
     const core = await wireTurnCore(cfg, phase1, {
       getFrontmost: () => frontmostTracker.get(),
       screenCapturer: phase1.screenCapturer,
-      openQuickControls: (tab) => getQuickControls().open(undefined, { tab }),
+      openQuickControls: () => phase1.openSettings(),
       voicePersistence: {
         get: () => settings.sttSettings.get().enabled,
         set: settings.sttSettings.setEnabled,

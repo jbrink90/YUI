@@ -76,6 +76,7 @@ describe("wirePetControls", () => {
       surfaces: { summonInput: vi.fn() },
       remoteSurfaces: { onOpenSettings: vi.fn() },
       openSettings: vi.fn(),
+      openContextMenu: vi.fn(),
       openDevtools: vi.fn(),
       register: (teardown: () => void) => {
         registered.push(teardown);
@@ -138,19 +139,20 @@ describe("wirePetControls", () => {
       new MouseEvent("contextmenu", { clientX: 5, clientY: 6, cancelable: true }),
     );
     expect(first.open).not.toHaveBeenCalled();
-    expect(wired.controls.get().open).toHaveBeenCalledWith({ x: 5, y: 6 });
+    expect(wired.controls.get().open).not.toHaveBeenCalled();
+    expect(wired.deps.openContextMenu).toHaveBeenCalled();
 
     teardownDeps(wired);
   });
 
-  it("opens the live panel at the pointer from the stage context menu", () => {
+  it("pops the native context menu from the stage right-click", () => {
     const wired = makeDeps();
 
     const event = new MouseEvent("contextmenu", { clientX: 12, clientY: 34, cancelable: true });
     wired.stage.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(wired.controls.get().open).toHaveBeenCalledWith({ x: 12, y: 34 });
+    expect(wired.deps.openContextMenu).toHaveBeenCalled();
 
     teardownDeps(wired);
   });

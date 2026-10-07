@@ -49,6 +49,7 @@ export function wirePetControls(deps: {
     | "canManageVoices"
     | "canReuploadVoices"
     | "canPasteVoiceId"
+    | "listTtsModels"
   >;
   pushSocket: Pick<PushSocket, "getState" | "onState" | "sendReset" | "reconnectNow">;
   stopTurn: () => void;
@@ -57,6 +58,10 @@ export function wirePetControls(deps: {
   surfaces: Pick<Surfaces, "summonInput">;
   remoteSurfaces: Pick<RemoteSurfaces, "onOpenSettings">;
   openSettings: () => void;
+  /** Right-click on the character — pops the tray-style native menu. */
+  openContextMenu: () => void;
+  /** The live chat server's models — the Connection tab's chat model dropdown. */
+  listChatModels: () => Promise<string[] | null>;
   onGuide: (guide: GuideKey, text: string) => void;
   openDevtools: () => void;
   register: (teardown: () => void) => void;
@@ -77,6 +82,8 @@ export function wirePetControls(deps: {
     surfaces,
     remoteSurfaces: remote,
     openSettings,
+    openContextMenu,
+    listChatModels,
     onGuide,
     openDevtools,
     register,
@@ -93,6 +100,7 @@ export function wirePetControls(deps: {
     canManageVoices,
     canReuploadVoices,
     canPasteVoiceId,
+    listTtsModels,
   } = speaker;
   const {
     screenshotSettings,
@@ -175,6 +183,8 @@ export function wirePetControls(deps: {
       canManageVoices,
       canReuploadVoices,
       canPasteVoiceId,
+      listTtsModels,
+      listChatModels,
       onGainPreview: (mouthOpen) => renderer.setMouthOpen(mouthOpen),
       onGainPreviewEnd: () => renderer.stopMouth(),
       onOpenDevtools: openDevtools,
@@ -194,8 +204,9 @@ export function wirePetControls(deps: {
   // Re-mounted on locale change (see i18n subscriber below); consumers read the live binding.
   let quickControls = buildQuickControls();
   register(() => quickControls.dispose());
-  // A popped-out surface has no settings panel of its own; it asks this window for one.
-  remote.onOpenSettings(() => quickControls.open(undefined, { tab: "conn" }));
+  // A popped-out surface has no settings panel of its own; it asks this window for one —
+  // which opens the detached settings window, same as the context menu.
+  remote.onOpenSettings(() => openSettings());
 
   // Re-mount localized DOM surfaces when display language changes.
   // Defer to microtask so triggering click handler (picker inside quick-controls) unwinds
@@ -212,7 +223,7 @@ export function wirePetControls(deps: {
 
   function onContextMenu(e: MouseEvent): void {
     e.preventDefault();
-    quickControls.open({ x: e.clientX, y: e.clientY });
+    openContextMenu();
   }
   stage.addEventListener("contextmenu", onContextMenu);
   register(() => stage.removeEventListener("contextmenu", onContextMenu));

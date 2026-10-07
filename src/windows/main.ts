@@ -41,7 +41,9 @@ import {
   resolveScreenSourceProvider,
 } from "../io/window/capture/tauri-screen";
 import { createDevtoolsWindowOpener } from "../io/window/openers/devtools-window";
+import { createChatModelLister } from "../io/chat/models/chat-models";
 import { createSettingsWindowOpener } from "../io/window/openers/settings-window";
+import { createPetContextMenu } from "../io/window/pet/context-menu";
 import { excludeOwnOriginFromCorsFetch } from "../io/window/own-origin-fetch";
 import { createLogger, initLogger } from "../logger";
 import { createStatusPill } from "../ui/chips/status-pill";
@@ -97,9 +99,9 @@ async function bootstrap(): Promise<BootstrapHandle> {
     mount: root,
     settings: settingsStores.screenshotSettings,
     voice: voiceInputStatus,
-    onOpenSettings: () => controls.get().open(),
+    onOpenSettings: () => openSettings(),
     onFixVoice: createVoiceFix({
-      openConnection: () => controls.get().open(undefined, { tab: "conn" }),
+      openConnection: () => openSettings(),
       status: voiceInputStatus,
     }),
   });
@@ -193,6 +195,12 @@ async function bootstrap(): Promise<BootstrapHandle> {
     surfaces,
     remoteSurfaces: remote,
     openSettings,
+    openContextMenu: createPetContextMenu({ openSettings }),
+    listChatModels: createChatModelLister({
+      getEndpoints: petConfig.getEndpoints,
+      getApiKey: () => config.secrets.get(CHAT_API_KEY_SECRET),
+      log,
+    }),
     onGuide: help.ask,
     openDevtools,
     register,
@@ -225,6 +233,7 @@ async function bootstrap(): Promise<BootstrapHandle> {
       root,
       stage,
       getQuickControls: controls.get,
+      openSettings,
       pushSocket: push.pushSocket,
       delegations: push.delegations,
       delegationHistory: push.delegationHistory,
@@ -247,7 +256,7 @@ async function bootstrap(): Promise<BootstrapHandle> {
           mount: root,
           store: push.delegations,
           pushState: push.pushSocket,
-          onOpenSettings: () => controls.get().open(undefined, { tab: "conn" }),
+          onOpenSettings: () => openSettings(),
           suppression: messageWindowSuppression({
             getMode,
             subscribe: settingsStores.messageWindowSettings.subscribe,
